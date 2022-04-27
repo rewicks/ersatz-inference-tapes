@@ -29,20 +29,24 @@ task train_subword_vocab : splitters
   :: .resource_flags=$cpuResourceFlags :: .action_flags=$cpuActionFlags
   > vocab model
   {
-    conda deactivate
-    conda activate py3
+    if [[ $language_pair == "de-en" ]]; then
+        conda deactivate
+        conda activate py3
 
-    for f in $train_data_path/$language_pair/*/*; do
-      cat $f >> data
-    done;
+        for f in $train_data_path/$language_pair/*/*; do
+          cat $f >> data
+        done;
 
-    spm_train --input data \
-      --model_prefix out \
-      --vocab_size=$vocab_size
+        spm_train --input data \
+          --model_prefix out \
+          --vocab_size=$vocab_size
 
-    rm data
+        rm data
 
-    ln -s out.model model
-    ln -s out.vocab vocab
+        ln -s out.model model
+        ln -s out.vocab vocab
+    fi
+    touch vocab
+    touch model
 
   }

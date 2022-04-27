@@ -56,6 +56,7 @@ task align_train_data : splitters
 
     done;
 
+
     if [[ $aligner == "vecalign" ]]; then
         conda deactivate
         conda activate py3
@@ -67,12 +68,15 @@ task align_train_data : splitters
         bash ~/code/LASER/tasks/embed/embed.sh trg_in $TARGET embeds/trg_out
 
         python ~/code/LASER/source/mine_bitexts.py --mode mine --gpu \
-            --src-embeddings embeds/$src_out \
+            --src-embeddings embeds/src_out \
             --src-lang $SOURCE \
-            --trg-embeddings embeds/$trg_out \
+            --trg-embeddings embeds/trg_out \
             --trg-lang $TARGET \
             --output alignments/src_out-$TARGET \
             src_in trg_in
+
+        conda deactivate
+        conda activate py3
 
         cat alignments/src_out-$TARGET | cut -f1 | spm_encode --model $model >> src
         cat alignments/src_out-$TARGET | cut -f2 | spm_encode --model $model >> trg 
