@@ -24,10 +24,10 @@ task align_train_data : splitters
 
     for f in $train_data_dir/*/*.$SOURCE; do
       echo "Working on : $f"
-      
+
       src=$f
       trg="${src::-2}$TARGET"
-      
+
       prefix=$(echo $f | rev | cut -d'/' -f2 | rev)
 
       src_out=$(echo $src | rev | cut -d'/' -f1 | rev)
@@ -37,17 +37,11 @@ task align_train_data : splitters
           $VECALIGN/overlap.py -i $src -o overlap/$src_out -n 10
           $VECALIGN/overlap.py -i $trg -o overlap/$trg_out -n 10
 
-          bash ~/code/LASER/tasks/embed/embed.sh overlap/$src_out $SOURCE embeds/$src_out
-          bash ~/code/LASER/tasks/embed/embed.sh overlap/$trg_out $TARGET embeds/$trg_out
+          cat overlap/$src_out >> overlap/src_in
+          cat overlap/$trg_out >> overlap/trg_in
 
-          $VECALIGN/vecalign.py --alignment_max_size 8 --src $src --tgt $trg \
-             --src_embed overlap/$src_out embeds/$src_out \
-             --tgt_embed overlap/$trg_out embeds/$trg_out > alignments/$prefix.$src_out-$TARGET.lines
-
-          rm embeds/$src_out
-          rm embeds/$trg_out
-
-          python /exp/rwicks/ersatz/exp/inference/make-aligned.py $src $trg alignments/$prefix.$src_out-$TARGET.lines alignments/$prefix.$src_out-$TARGET
+          cat $src >> src_in
+          cat $trg >> trg_in
 
       else
           cat $src >> src_in
@@ -58,6 +52,16 @@ task align_train_data : splitters
 
 
     if [[ $aligner == "vecalign" ]]; then
+
+        bash ~/code/LASER/tasks/embed/embed.sh overlap/src_in $SOURCE embeds/src_out
+        bash ~/code/LASER/tasks/embed/embed.sh overlap/trg_in $TARGET embeds/trg_out
+
+        $VECALIGN/vecalign.py --alignment_max_size 8 --src $src --tgt $trg \
+           --src_embed overlap/src_out embeds/src_out \
+           --tgt_embed overlap/trg_out embeds/trg_out > alignments/$prefix.$SOURCE-$TARGET.lines
+
+        python /exp/rwicks/ersatz/exp/inference/make-aligned.py src_in trg_in alignments/$prefix.$SOURCE-$TARGET.lines alignments/$prefix.$SOURCE-$TARGET
+
         conda deactivate
         conda activate py3
 
@@ -72,16 +76,17 @@ task align_train_data : splitters
             --src-lang $SOURCE \
             --trg-embeddings embeds/trg_out \
             --trg-lang $TARGET \
-            --output alignments/src_out-$TARGET \
+            --output alignments/$SOURCE-$TARGET \
             src_in trg_in
 
         conda deactivate
         conda activate py3
 
-        cat alignments/src_out-$TARGET | cut -f1 | spm_encode --model $model >> src
-        cat alignments/src_out-$TARGET | cut -f2 | spm_encode --model $model >> trg 
+        cat alignments/$SOURCE-$TARGET | cut -f2 | spm_encode --model $model >> src
+        cat alignments/$SOURCE-$TARGET | cut -f3 | spm_encode --model $model >> trg
 
     fi
+    rm embeds/*
+    rm embeds/*
 
   }
-

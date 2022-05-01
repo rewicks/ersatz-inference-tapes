@@ -34,8 +34,19 @@ plan do_translate_test_sets {
 }
 
 
-plan do_align { 
-    reach align_train_data via (LanguagePair: de-en) *
-        (TrainSplitter: *) *
-        (Aligner: *)
+plan do_align {
+    reach align_train_data via (LanguagePair: de-en cs-en) *
+        (TrainSplitter: ersatz) *
+        (Aligner: vecalign)
+}
+
+plan do_score_prism {
+    reach score_test_sets via (LanguagePair: *) *
+        (InferenceSplitter: *) *
+        (Retain: *)
+}
+
+plan do_score_trained {
+    reach score_test_sets via (LanguagePair: de-en cs-en) *
+        ()
 }

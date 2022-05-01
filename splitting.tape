@@ -71,7 +71,7 @@ task split_test_sets : splitters
 task split_train_sets : splitters
     :: train_data_path=@
     :: language_pair=@
-    :: train_splitter=@
+    :: translation_model=@
     :: pyenv=@ :: .submitter=$grid :: devices=@
     :: devices_per_task=0
     :: .resource_flags=$cpuResourceFlags :: .action_flags=$cpuActionFlags
@@ -84,16 +84,20 @@ task split_train_sets : splitters
             mkdir -p out/$PARENT_DIR
             DOCID=$(echo $f | rev | cut -d'/' -f1 | rev)
             OUTFILE=out/$PARENT_DIR/$DOCID
-            if [[ $train_splitter == "ersatz" ]]; then
+            if [[ $translation_model == "ersatz" ]]; then
                 cat $f | add_punc.py | tr '\n' ' ' | ersatz > $OUTFILE
             else
-                if [[ $train_splitter == "ersatz-m" ]]; then
+                if [[ $translation_model == "ersatz-m" ]]; then
                     cat $f | add_punc.py | tr '\n' ' ' | ersatz --model $LANG > $OUTFILE
                 else
-                    if [[ $train_splitter == "documents" ]]; then
+                    if [[ $translation_model == "documents" ]]; then
                         cp $f $OUTFILE
                     else
-                      cat $f | add_punc.py | tr '\n' ' ' | $train_splitter --lang $LANG > $OUTFILE
+                        if [[ $translation_model == "prism" ]]; then
+                            cp $f $OUTFILE
+                        else
+                            cat $f | add_punc.py | tr '\n' ' ' | $train_splitter --lang $LANG > $OUTFILE
+                        fi
                     fi
                 fi
            fi

@@ -2,18 +2,25 @@
 task translate_test_sets : splitters
     :: translation_model=@
     :: language_pair=@
+    :: reverse=@
     :: pyenv=@ :: .submitter=$grid :: devices=@
     :: devices_per_task=0
     :: .resource_flags=$gpuResourceFlags :: .action_flags=$gpuActionFlags
   < input_source_data=$out@split_test_sets
   < model_path=$model@train_split_models
-  < data_path=$data@train_split_models
+  < data_path=$data@train_split_model
   < vocab_model=$model@train_subword_vocab
   > out
   {
     mkdir -p out
-    SOURCE=$(echo $language_pair | cut -d'-' -f1)
-    TARGET=$(echo $language_pair | cut -d'-' -f2)
+    if [[ $reverse == "true" ]]; then
+        SOURCE=$(echo $language_pair | cut -d'-' -f2)
+        TARGET=$(echo $language_pair | cut -d'-' -f1)
+    else
+        SOURCE=$(echo $language_pair | cut -d'-' -f1)
+        TARGET=$(echo $language_pair | cut -d'-' -f2)
+    fi
+
     for f in $input_source_data/*.sent; do
       echo $f
       outfile=$(echo $f | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
@@ -22,10 +29,10 @@ task translate_test_sets : splitters
             # path to directory containing 'dict.src.txt' and 'checkpoint.pt'
             modeldir=/home/hltcoe/mpost/models/prism_private/m39v1
             scriptdir=/home/hltcoe/rwicks/scripts/prism
-            
+
             module load cuda11.0/toolkit cudnn
             source /opt/anaconda3/etc/profile.d/conda.sh
-            
+
             nvidia-smi
             hostname
             env
@@ -34,8 +41,10 @@ task translate_test_sets : splitters
 
             bash $scriptdir/translate.sh $f $TARGET $outfile "$@"
       else
-        echo "nothing to do"
-      fi
+        fairseq-interactive --path=$model_path \
+            $data_path \
+            --input=$f \
+            > $outfile.log
+        grep "H-[0-9]*" $outfile.log | cut -f3 -d$'\t' | tr -d ' ' | sed 's/▁/ /g' | perl -pe 's/^\s+//' > $outfile
     done;
   }
-
