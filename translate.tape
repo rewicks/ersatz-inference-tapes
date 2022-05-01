@@ -8,7 +8,7 @@ task translate_test_sets : splitters
     :: .resource_flags=$gpuResourceFlags :: .action_flags=$gpuActionFlags
   < input_source_data=$out@split_test_sets
   < model_path=$model@train_split_models
-  < data_path=$data@train_split_model
+  < data_path=$data@train_split_models
   < vocab_model=$model@train_subword_vocab
   > out
   {

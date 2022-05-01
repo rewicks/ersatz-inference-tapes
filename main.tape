@@ -46,7 +46,7 @@ plan do_score_prism {
         (Retain: *)
 }
 
-plan do_score_trained {
-    reach score_test_sets via (LanguagePair: de-en cs-en) *
-        ()
-}
+#plan do_score_trained {
+#    reach score_test_sets via (LanguagePair: de-en cs-en) *
+#        ()
+#}
