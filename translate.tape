@@ -46,5 +46,6 @@ task translate_test_sets : splitters
             --input=$f \
             > $outfile.log
         grep "H-[0-9]*" $outfile.log | cut -f3 -d$'\t' | tr -d ' ' | sed 's/▁/ /g' | perl -pe 's/^\s+//' > $outfile
+      fi
     done;
   }

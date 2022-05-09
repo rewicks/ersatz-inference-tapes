@@ -6,7 +6,7 @@ task train_split_models : splitters
     :: reverse=@
     :: pyenv=@ :: .submitter=$grid :: devices=@
     :: devices_per_task=0
-    :: .resource_flags=$cpuResourceFlags :: .action_flags=$cpuActionFlags
+    :: .resource_flags=$gpuResourceFlags :: .action_flags=$gpuActionFlags
   > model data
   < src_data=$src@align_train_data
   < trg_data=$trg@align_train_data
@@ -31,8 +31,8 @@ task train_split_models : splitters
 
         conda deactivate
         conda activate py3
-        cat $dev_data_path/*.$SOURCE | spm_encode --model $vocab_model >> raw_data/dev.$SOURCE
-        cat $dev_data_path/*.$TARGET | spm_encode --model $vocab_model >> raw_data/dev.$TARGET
+        cat $dev_data_path/$language_pair/*.$SOURCE | spm_encode --model $vocab_model >> raw_data/dev.$SOURCE
+        cat $dev_data_path/$language_pair/*.$TARGET | spm_encode --model $vocab_model >> raw_data/dev.$TARGET
 
         cp $src_data raw_data/train.$SOURCE
         cp $trg_data raw_data/train.$TARGET
@@ -40,6 +40,9 @@ task train_split_models : splitters
         # Trains a fairseq model.
         conda deactivate
         conda activate fairseq
+
+        printf -v DATE '%(%Y-%m-%d-%H-%M-%S)T' -1
+        echo $DATE
 
         fairseq-preprocess \
             --source-lang $SOURCE \

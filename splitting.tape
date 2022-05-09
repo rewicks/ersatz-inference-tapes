@@ -78,29 +78,32 @@ task split_train_sets : splitters
     > out
     {
         mkdir -p out
-        for f in $train_data_path/$language_pair/*/*; do
-            LANG=$(echo $f | rev | cut -d'.' -f1 | rev)
-            PARENT_DIR=$(echo $f | rev | cut -d'/' -f2 | rev)
-            mkdir -p out/$PARENT_DIR
-            DOCID=$(echo $f | rev | cut -d'/' -f1 | rev)
-            OUTFILE=out/$PARENT_DIR/$DOCID
-            if [[ $translation_model == "ersatz" ]]; then
-                cat $f | add_punc.py | tr '\n' ' ' | ersatz > $OUTFILE
-            else
-                if [[ $translation_model == "ersatz-m" ]]; then
-                    cat $f | add_punc.py | tr '\n' ' ' | ersatz --model $LANG > $OUTFILE
+        if [[ $translation_model != "prism" ]]; then
+            for f in $train_data_path/$language_pair/*/*; do
+                LANG=$(echo $f | rev | cut -d'.' -f1 | rev)
+                PARENT_DIR=$(echo $f | rev | cut -d'/' -f2 | rev)
+                mkdir -p out/$PARENT_DIR
+                DOCID=$(echo $f | rev | cut -d'/' -f1 | rev)
+                OUTFILE=out/$PARENT_DIR/$DOCID
+                if [[ $translation_model == "ersatz" ]]; then
+                    cat $f | add_punc.py | tr '\n' ' ' | ersatz > $OUTFILE
                 else
-                    if [[ $translation_model == "documents" ]]; then
-                        cp $f $OUTFILE
+                    if [[ $translation_model == "ersatz-m" ]]; then
+                        cat $f | add_punc.py | tr '\n' ' ' | ersatz --model $LANG > $OUTFILE
                     else
-                        if [[ $translation_model == "prism" ]]; then
+                        if [[ $translation_model == "documents" ]]; then
                             cp $f $OUTFILE
                         else
-                            cat $f | add_punc.py | tr '\n' ' ' | $train_splitter --lang $LANG > $OUTFILE
+                            cat $f | add_punc.py | tr '\n' ' ' | $translation_model --lang $LANG > $OUTFILE
                         fi
                     fi
-                fi
-           fi
-
-        done;
+               fi
+            done;
+        else
+            mkdir -p out/prefix/
+            SOURCE=$(echo $language_pair | cut -d'-' -f1)
+            TARGET=$(echo $language_pair | cut -d'-' -f2)
+            echo "This is a filler sentence" > out/prefix/prefix.$SOURCE
+            echo "This is also a filler sentence" > out/prefix/prefix.$TARGET
+        fi
   }

@@ -27,7 +27,7 @@ plan do_split_test_sets {
 
 plan do_translate_test_sets {
     reach score_test_sets via (TranslationModel: prism) *
-        (InferenceSplitter: *) *
+        (InferenceSplitter: always documents ersatz ersatz-m ml-punkt moses punkt spacy-split) *
         (TestData: wmt20) *
         (LanguagePair: cs-en de-en de-fr en-cs en-de en-pl en-ru en-zh fr-de pl-en ru-en zh-en) *
         (Retain: *)
@@ -35,9 +35,16 @@ plan do_translate_test_sets {
 
 
 plan do_align {
-    reach align_train_data via (LanguagePair: de-en cs-en) *
-        (TrainSplitter: ersatz) *
-        (Aligner: vecalign)
+    reach align_train_data via (LanguagePair: de-en) *
+        (TranslationModel: always documents ersatz ersatz-m ml-punkt moses punkt spacy-split) *
+        (Aligner: vecalign global)
+}
+
+plan do_train {
+    reach train_split_models via (LanguagePair: de-en) *
+        (TranslationModel: always documents ersatz ersatz-m ml-punkt moses punkt spacy-split) *
+        (Aligner: global) *
+        (Reverse: false)
 }
 
 plan do_score_prism {

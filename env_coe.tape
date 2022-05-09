@@ -12,5 +12,7 @@ global {
     gpuLowActionFlags="-q gpu.q -M rwicks@jhu.edu -m base"
     gpuLowResourceFlags="-l 'gpu=1,h_rt=128:0:0'"
 
+    gpuShortActionFlags="-q gpu_short.q -M rwicks@jhu.edu"
+    gpuShortResourceFlags="-l 'gpu=1,h_rt=0:59:0'"
 }
 

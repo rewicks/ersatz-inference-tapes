@@ -29,9 +29,12 @@ task score_test_sets : splitters
         paste $srcdoc.idx $f | combine-by-line-number.py > out/$docid.$TARGET
         cat $f | tr '\n' ' ' > doc_out/$docid.$TARGET
       else
-        python ~/code/word-based-aligner/align.py --tokens_path $f \
-                $refdoc \
-                --clean > out/$docid.$TARGET
+        conda deactivate
+        conda activate docaligner
+        python ~/code/docaligner/project_text.py $f $refdoc --echo sys > out/$docid.$TARGET
+        #python ~/code/word-based-aligner/align.py --tokens_path $f \
+        #        $refdoc \
+        #        --clean > out/$docid.$TARGET
         cat $f | tr '\n' ' ' > doc_out/$docid.$TARGET
       fi
       cat out/$docid.$TARGET >> hypothesis
