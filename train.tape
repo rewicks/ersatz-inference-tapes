@@ -83,13 +83,14 @@ task train_split_models : splitters
           --warmup-init-lr 1e-7 --lr 0.0005 --min-lr 1e-9 \
           --max-tokens 16000 \
           --max-epoch 100 \
-          --update-freq 200 \
+          --update-freq 1 \
+          --patience 10 \
           --ddp-backend=no_c10d \
           --no-last-checkpoints \
           --no-epoch-checkpoints \
           --log-format json --log-interval 1  > out/log.$DATE
 
-        ln -s out/checkpoint.best model
+        ln -s out/checkpoint_best.pt model
     fi
 
   }

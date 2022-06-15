@@ -86,15 +86,15 @@ task split_train_sets : splitters
                 DOCID=$(echo $f | rev | cut -d'/' -f1 | rev)
                 OUTFILE=out/$PARENT_DIR/$DOCID
                 if [[ $translation_model == "ersatz" ]]; then
-                    cat $f | add_punc.py | tr '\n' ' ' | ersatz > $OUTFILE
+                    cat $f | tr '\n' ' ' | ersatz > $OUTFILE
                 else
                     if [[ $translation_model == "ersatz-m" ]]; then
-                        cat $f | add_punc.py | tr '\n' ' ' | ersatz --model $LANG > $OUTFILE
+                        cat $f | tr '\n' ' ' | ersatz --model $LANG > $OUTFILE
                     else
                         if [[ $translation_model == "documents" ]]; then
                             cp $f $OUTFILE
                         else
-                            cat $f | add_punc.py | tr '\n' ' ' | $translation_model --lang $LANG > $OUTFILE
+                            cat $f | tr '\n' ' ' | $translation_model --lang $LANG > $OUTFILE
                         fi
                     fi
                fi

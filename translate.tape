@@ -13,6 +13,7 @@ task translate_test_sets : splitters
   > out
   {
     mkdir -p out
+    mkdir -p input
     if [[ $reverse == "true" ]]; then
         SOURCE=$(echo $language_pair | cut -d'-' -f2)
         TARGET=$(echo $language_pair | cut -d'-' -f1)
@@ -23,8 +24,8 @@ task translate_test_sets : splitters
 
     for f in $input_source_data/*.sent; do
       echo $f
-      outfile=$(echo $f | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
-      outfile=out/$outfile.$TARGET
+      docid=$(echo $f | rev | cut -d'/' -f1 | rev | cut -d'.' -f1)
+      outfile=out/$docid.$TARGET
       if [[ $translation_model == "prism" ]]; then
             # path to directory containing 'dict.src.txt' and 'checkpoint.pt'
             modeldir=/home/hltcoe/mpost/models/prism_private/m39v1
@@ -41,9 +42,17 @@ task translate_test_sets : splitters
 
             bash $scriptdir/translate.sh $f $TARGET $outfile "$@"
       else
+        conda deactivate
+        conda activate py3
+        
+        cat $f | spm_encode --model $vocab_model > input/$docid.$TARGET
+
+        conda deactivate
+        conda activate fairseq
+        
         fairseq-interactive --path=$model_path \
             $data_path \
-            --input=$f \
+            --input=input/$docid.$TARGET \
             > $outfile.log
         grep "H-[0-9]*" $outfile.log | cut -f3 -d$'\t' | tr -d ' ' | sed 's/▁/ /g' | perl -pe 's/^\s+//' > $outfile
       fi

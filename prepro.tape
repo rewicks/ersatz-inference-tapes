@@ -55,6 +55,7 @@ task align_train_data : splitters
 
             cat alignments/*.src | spm_encode --model $model >> src
             cat alignments/*.tgt | spm_encode --model $model >> trg
+            rm overlap/*
         else
             bash ~/code/LASER/tasks/embed/embed.sh src_in $SOURCE embeds/src_out
             bash ~/code/LASER/tasks/embed/embed.sh trg_in $TARGET embeds/trg_out
