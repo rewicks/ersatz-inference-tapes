@@ -2,6 +2,7 @@ task split_test_sets : splitters
     :: test_data_path=@
     :: language_pair=@
     :: inference_splitter=@
+    :: reverse=@
     :: retain_segmentations=@
     :: pyenv=@ :: .submitter=$grid :: devices=@
     :: devices_per_task=0
@@ -11,8 +12,13 @@ task split_test_sets : splitters
     which python
     mkdir -p out
     DATA_PATH="$test_data_path/$language_pair/docs"
-    SOURCE=$(echo $language_pair | cut -d'-' -f1)
-    TARGET=$(echo $language_pair | cut -d'-' -f2)
+    if [[ $reverse == "true" ]]; then
+        SOURCE=$(echo $language_pair | cut -d'-' -f2)
+        TARGET=$(echo $language_pair | cut -d'-' -f1)
+    else
+        SOURCE=$(echo $language_pair | cut -d'-' -f1)
+        TARGET=$(echo $language_pair | cut -d'-' -f2)
+    fi
     if [[ $retain_segmentations == "true" ]]; then
         for f in $DATA_PATH/*; do
           echo $f
@@ -94,7 +100,11 @@ task split_train_sets : splitters
                         if [[ $translation_model == "documents" ]]; then
                             cp $f $OUTFILE
                         else
-                            cat $f | tr '\n' ' ' | $translation_model --lang $LANG > $OUTFILE
+                            if [[ $translation_model == "pairs" ]]; then
+                                cat $f | pairs > $OUTFILE
+                            else
+                                cat $f | tr '\n' ' ' | $translation_model --lang $LANG > $OUTFILE
+                            fi
                         fi
                     fi
                fi

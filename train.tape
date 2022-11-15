@@ -34,8 +34,13 @@ task train_split_models : splitters
         cat $dev_data_path/$language_pair/*.$SOURCE | spm_encode --model $vocab_model >> raw_data/dev.$SOURCE
         cat $dev_data_path/$language_pair/*.$TARGET | spm_encode --model $vocab_model >> raw_data/dev.$TARGET
 
-        cp $src_data raw_data/train.$SOURCE
-        cp $trg_data raw_data/train.$TARGET
+        if [[ $reverse == "true" ]]; then
+            cp $trg_data raw_data/train.$SOURCE
+            cp $src_data raw_data/train.$TARGET
+        else
+            cp $src_data raw_data/train.$SOURCE
+            cp $trg_data raw_data/train.$TARGET
+        fi
 
         # Trains a fairseq model.
         conda deactivate
@@ -106,10 +111,9 @@ task train_subword_vocab : splitters
   :: .resource_flags=$cpuResourceFlags :: .action_flags=$cpuActionFlags
   > vocab model
   {
-    if [[ $language_pair == "de-en" ]]; then
-        conda deactivate
-        conda activate py3
-
+    conda deactivate
+    conda activate py3
+    if [[ $language_pair == "de-en" || $language_pair == "cs-en" ]]; then
         for f in $train_data_path/$language_pair/*/*; do
           cat $f >> data
         done;
@@ -122,8 +126,9 @@ task train_subword_vocab : splitters
 
         ln -s out.model model
         ln -s out.vocab vocab
+    else
+        touch model
+        touch vocab
     fi
-    touch vocab
-    touch model
 
   }

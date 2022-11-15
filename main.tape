@@ -35,7 +35,7 @@ plan do_test_comet {
 
 plan do_score_bleu_test_sets {
     reach score_test_sets via (TranslationModel: prism) *
-        (InferenceSplitter: always-split documents ersatz ersatz-m ml-punkt moses punkt spacy-split) *
+        (InferenceSplitter: always-split documents ersatz moses punkt spacy-split) *
         (TestData: wmt20) *
         (LanguagePair: cs-en de-en de-fr en-cs en-de en-pl en-ru en-zh fr-de pl-en ru-en zh-en) *
         (Retain: *)
@@ -50,16 +50,29 @@ plan do_score_comet_test_sets {
 }
 
 plan do_score_custom {
-    reach score_test_sets via (TranslationModel: always-split documents ersatz ersatz-m moses punkt spacy-split) *
-        (InferenceSplitter: always-split documents ersatz ersatz-m ml-punkt moses punkt spacy-split) *
+    reach score_test_sets via (TranslationModel: spacy-split) *
+        (InferenceSplitter: always-split documents ersatz ersatz-m moses punkt spacy-split) *
         (TestData: wmt20) *
         (LanguagePair: de-en) *
         (Retain: false) *
-        (Aligner: global)
-    reach comet_score_test_sets via (TranslationModel: always-split documents ersatz ersatz-m moses punkt spacy-split) *
-        (InferenceSplitter: always-split documents ersatz ersatz-m ml-punkt moses punkt spacy-split) *
+        (Aligner: global vecalign)
+}
+
+plan do_align_train {
+    reach score_test_sets via (TranslationModel: always-split documents ersatz moses punkt spacy-split pairs) *
+        (InferenceSplitter: always-split documents ersatz ml-punkt moses punkt spacy-split) *
         (TestData: wmt20) *
         (LanguagePair: de-en) *
+        (Retain: false) *
+        (Aligner: global vecalign) *
+        (Reverse: true)
+}
+
+plan do_split_train {
+    reach split_train_sets via (TranslationModel: always-split documents ersatz ersatz-m moses punkt spacy-split) *
+        (InferenceSplitter: always-split documents ersatz ersatz-m ml-punkt moses punkt spacy-split) *
+        (TestData: wmt20) *
+        (LanguagePair: cs-en) *
         (Retain: false) *
         (Aligner: global)
 }

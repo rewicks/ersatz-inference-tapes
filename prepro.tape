@@ -34,28 +34,40 @@ task align_train_data : splitters
           cat $trg >> trg_in
 
         done;
-
-
         if [[ $aligner == "vecalign" ]]; then
+            for f in $train_data_dir/*; do
+                dataset=$(echo $f | rev | cut -d'/' -f1 | rev)
+                echo "" > src_in
+                echo "" > trg_in
+                for t in $f/*.$SOURCE; do
+                    echo "Working on: $t"
+                    src=$t
+                    trg="${src::-2}$TARGET"
+                    cat $src >> src_in
+                    cat $trg >> trg_in
+                done;
+                $VECALIGN/overlap.py -i src_in -o overlap/src_in -n 6
+                $VECALIGN/overlap.py -i trg_in -o overlap/trg_in -n 6
+                
+                bash ~/code/LASER/tasks/embed/embed.sh overlap/src_in $SOURCE embeds/src_out
+                bash ~/code/LASER/tasks/embed/embed.sh overlap/trg_in $TARGET embeds/trg_out
 
-            $VECALIGN/overlap.py -i src_in -o overlap/src_in -n 6
-            $VECALIGN/overlap.py -i trg_in -o overlap/trg_in -n 6
-            
-            bash ~/code/LASER/tasks/embed/embed.sh overlap/src_in $SOURCE embeds/src_out
-            bash ~/code/LASER/tasks/embed/embed.sh overlap/trg_in $TARGET embeds/trg_out
+                $VECALIGN/vecalign.py --alignment_max_size 4 --src src_in --tgt trg_in \
+                   --src_embed overlap/src_in embeds/src_out \
+                   --tgt_embed overlap/trg_in embeds/trg_out > alignments/$dataset.$SOURCE-$TARGET.lines
 
-            $VECALIGN/vecalign.py --alignment_max_size 4 --src src_in --tgt trg_in \
-               --src_embed overlap/src_in embeds/src_out \
-               --tgt_embed overlap/trg_in embeds/trg_out > alignments/$SOURCE-$TARGET.lines
+                python /exp/rwicks/ersatz/exp/inference/make-aligned.py src_in trg_in alignments/$dataset.$SOURCE-$TARGET.lines alignments/dataset.$SOURCE-$TARGET
 
-            python /exp/rwicks/ersatz/exp/inference/make-aligned.py src_in trg_in alignments/$SOURCE-$TARGET.lines alignments/$SOURCE-$TARGET
+                conda deactivate
+                conda activate py3
 
-            conda deactivate
-            conda activate py3
-
-            cat alignments/*.src | spm_encode --model $model >> src
-            cat alignments/*.tgt | spm_encode --model $model >> trg
-            rm overlap/*
+                cat alignments/$dataset.$SOURCE-$TARGET.src | spm_encode --model $model >> src
+                cat alignments/$datset.$SOURCE-$TARGET.tgt | spm_encode --model $model >> trg
+                rm src_in
+                rm trg_in
+                rm overlap/*
+                rm embeds/*
+            done;
         else
             bash ~/code/LASER/tasks/embed/embed.sh src_in $SOURCE embeds/src_out
             bash ~/code/LASER/tasks/embed/embed.sh trg_in $TARGET embeds/trg_out
